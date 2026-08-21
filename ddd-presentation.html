@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Domain-Driven Design — Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #070C1A;
+  --surf:    #0D1428;
+  --surf2:   #131D38;
+  --border:  #1C2A4A;
+  --blue:    #4B9EF5;
+  --teal:    #2EC4A4;
+  --gold:    #F5C14A;
+  --coral:   #FF6B6B;
+  --purple:  #9B7FE8;
+  --text:    #D8E4F8;
+  --muted:   #6B7FA0;
+  --dsp: 'Space Grotesk', system-ui, sans-serif;
+  --body: 'Inter', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--body); overflow: hidden; }
+
+/* blueprint grid */
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(rgba(75,158,245,.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(75,158,245,.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* ── SLIDES ── */
+.deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+.slide {
+  position: absolute; inset: 0; z-index: 1;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 3.5rem 6rem; pointer-events: none;
+  transition: opacity .38s ease, transform .38s ease;
+}
+.slide[data-state="idle"]   { opacity: 0; transform: translateX(56px); }
+.slide[data-state="active"] { opacity: 1; transform: translateX(0);    pointer-events: all; }
+.slide[data-state="exit"]   { opacity: 0; transform: translateX(-56px);}
+
+/* ── CHROME ── */
+.progress { position: fixed; top: 0; left: 0; height: 2px; background: linear-gradient(90deg, var(--blue), var(--teal)); transition: width .38s ease; z-index: 50; }
+.counter  { position: fixed; top: 1.4rem; right: 2rem; font-family: var(--dsp); font-size: .78rem; color: var(--muted); z-index: 50; }
+.timer    { position: fixed; bottom: 1.8rem; right: 2rem; font-family: var(--dsp); font-size: .82rem; color: var(--muted); cursor: pointer; z-index: 50; user-select: none; }
+.timer.warn   { color: var(--gold); }
+.timer.danger { color: var(--coral); }
+.dots { position: fixed; bottom: 1.8rem; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 50; }
+.dot  { width: 6px; height: 6px; border-radius: 50%; background: var(--border); cursor: pointer; transition: background .25s, width .25s, border-radius .25s; }
+.dot.on { width: 20px; border-radius: 3px; background: var(--blue); }
+.nav { position: fixed; bottom: 1.4rem; display: flex; gap: .75rem; left: 50%; transform: translateX(-50%); margin-top: 56px; z-index: 50; }
+.nbtn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border); background: var(--surf); color: var(--text); font-size: .95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color .2s, background .2s; }
+.nbtn:hover:not(:disabled) { border-color: var(--blue); background: var(--surf2); }
+.nbtn:disabled { opacity: .3; cursor: not-allowed; }
+.hint { position: fixed; bottom: 1.8rem; left: 2rem; font-size: .7rem; color: var(--border); font-family: var(--dsp); z-index: 50; }
+
+/* ── TYPOGRAPHY ── */
+h1 { font-family: var(--dsp); font-size: 3.6rem; font-weight: 700; letter-spacing: -.03em; line-height: 1.08; }
+h2 { font-family: var(--dsp); font-size: 2rem; font-weight: 600; letter-spacing: -.02em; margin-bottom: 1.8rem; }
+h3 { font-family: var(--dsp); font-size: .95rem; font-weight: 600; }
+p  { font-size: .88rem; line-height: 1.7; color: var(--muted); }
+.label { display: block; font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); margin-bottom: .9rem; }
+code { font-family: var(--mono); font-size: .82rem; color: var(--teal); background: rgba(46,196,164,.09); padding: 2px 7px; border-radius: 4px; }
+
+/* ── SLIDE 1 ── */
+#s1 { align-items: flex-start; }
+#s1::after { content: ''; position: absolute; top: -15%; right: -8%; width: 560px; height: 560px; background: radial-gradient(circle, rgba(75,158,245,.09) 0%, transparent 68%); pointer-events: none; animation: breathe 9s ease-in-out infinite; }
+@keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+.s1-sub  { font-size: .95rem; color: var(--muted); margin-top: 1.3rem; }
+.tags    { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1.8rem; }
+.tag     { padding: .22rem .75rem; border: 1px solid var(--border); border-radius: 100px; font-size: .72rem; color: var(--muted); font-family: var(--dsp); }
+
+/* ── SLIDE 2 ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; width: 100%; max-width: 860px; }
+.pcol    { background: var(--surf); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem; }
+.pcol.bad  { border-color: rgba(255,107,107,.35); }
+.pcol.good { border-color: rgba(46,196,164,.35); }
+.clabel  { font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .9rem; }
+.clabel.bad  { color: var(--coral); }
+.clabel.good { color: var(--teal); }
+.crow    { display: flex; justify-content: space-between; align-items: center; padding: .42rem 0; border-bottom: 1px solid var(--border); gap: .75rem; }
+.crow:last-child { border-bottom: none; }
+.biz { font-size: .8rem; color: var(--text); white-space: nowrap; }
+.techbad  { font-family: var(--mono); font-size: .75rem; color: var(--coral); }
+.techgood { font-family: var(--mono); font-size: .75rem; color: var(--teal); }
+
+/* ── SLIDE 3 ── */
+.bridge  { display: flex; align-items: center; gap: 1.5rem; width: 100%; max-width: 740px; margin: 2rem 0 1.5rem; }
+.bbox    { flex: 1; background: var(--surf); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem 1.4rem; text-align: center; }
+.bbox.ex { border-color: rgba(155,127,232,.4); }
+.bbox.dev{ border-color: rgba(75,158,245,.4); }
+.bline   { flex: 0 0 60px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bline hr{ width: 100%; border: none; border-top: 1px dashed var(--blue); }
+.bline span { font-size: .62rem; letter-spacing: .08em; color: var(--blue); font-family: var(--dsp); }
+.rules   { list-style: none; max-width: 740px; }
+.rules li{ display: flex; gap: .7rem; padding: .35rem 0; font-size: .85rem; color: var(--muted); }
+.rules li::before { content: '→'; color: var(--blue); flex-shrink: 0; }
+
+/* ── SLIDE 4 ── */
+.ctxs    { display: flex; gap: 1.25rem; width: 100%; max-width: 900px; }
+.cbox    { flex: 1; border: 1.5px dashed var(--border); border-radius: 16px; padding: 1.2rem; transition: border-color .3s; }
+.cbox:hover { border-color: var(--blue); }
+.cname   { font-family: var(--dsp); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .7rem; }
+.cent    { background: var(--surf); border: 1px solid var(--border); border-radius: 8px; padding: .55rem .75rem; margin-bottom: .45rem; }
+.cent h4 { font-family: var(--dsp); font-size: .78rem; font-weight: 600; }
+.cent p  { font-size: .68rem; color: var(--muted); margin-top: 2px; }
+.ctxnote { max-width: 900px; margin-top: 1.4rem; font-size: .82rem; text-align: center; color: var(--muted); }
+
+/* ── SLIDE 5 ── */
+.blocks  { display: grid; grid-template-columns: repeat(5, 1fr); gap: .9rem; width: 100%; max-width: 960px; }
+.blk     { background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; gap: .45rem; transition: border-color .25s; }
+.blk:hover { border-color: var(--blue); }
+.bicon   { font-size: 1.4rem; }
+.bname   { font-family: var(--dsp); font-size: .82rem; font-weight: 600; }
+.bdesc   { font-size: .7rem; color: var(--muted); line-height: 1.55; flex: 1; }
+.bex     { font-family: var(--mono); font-size: .66rem; color: var(--teal); padding-top: .45rem; border-top: 1px solid var(--border); margin-top: auto; }
+
+/* ── SLIDE 6 ── */
+.hexwrap { display: flex; gap: 3.5rem; align-items: center; width: 100%; max-width: 840px; }
+.hrules  { flex: 1; }
+.ritem   { display: flex; gap: .75rem; margin-bottom: .95rem; }
+.rnum    { width: 24px; height: 24px; border-radius: 50%; background: var(--surf2); border: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--dsp); font-size: .68rem; font-weight: 600; color: var(--blue); }
+.rtxt h4 { font-family: var(--dsp); font-size: .82rem; font-weight: 600; margin-bottom: 2px; }
+.rtxt p  { font-size: .75rem; color: var(--muted); line-height: 1.55; }
+
+/* ── SLIDE 7 ── */
+.pocflow { display: flex; gap: 1.25rem; align-items: center; width: 100%; max-width: 860px; margin: 1.4rem 0; }
+.pbox    { background: var(--surf); border: 1.5px solid var(--border); border-radius: 14px; padding: .9rem 1.2rem; text-align: center; min-width: 138px; }
+.pbox h4 { font-family: var(--dsp); font-size: .82rem; font-weight: 600; }
+.pbox p  { font-size: .68rem; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.parr    { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pev     { font-family: var(--mono); font-size: .62rem; color: var(--gold); }
+.pline   { width: 100%; height: 1px; background: var(--border); position: relative; }
+.pline::after { content: '›'; position: absolute; right: -4px; top: -9px; color: var(--muted); font-size: 1rem; }
+.stack2  { display: flex; gap: .6rem; flex-wrap: wrap; }
+.stag    { padding: .25rem .8rem; background: var(--surf); border: 1px solid var(--border); border-radius: 100px; font-size: .7rem; color: var(--muted); font-family: var(--dsp); }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+<div class="counter" id="ctr">1 / 7</div>
+<div class="dots"   id="dots"></div>
+<div class="timer"  id="tmr" title="Click to start / pause 5-min timer">5:00</div>
+<div class="hint">← → or Space to navigate</div>
+
+<div class="deck">
+
+<!-- S1: Title -->
+<div class="slide" id="s1" data-state="active">
+  <span class="label">POC Presentation</span>
+  <h1><span style="color:var(--blue)">Domain</span><br>Driven<br><span style="color:var(--muted);font-weight:300">Design</span></h1>
+  <p class="s1-sub">Order Fulfillment &amp; Delivery Scheduling — Modular Monolith</p>
+  <div class="tags">
+    <span class="tag">TypeScript</span><span class="tag">Express</span>
+    <span class="tag">TypeORM</span><span class="tag">PostgreSQL</span>
+    <span class="tag">3 Bounded Contexts</span><span class="tag">In-Process Event Bus</span>
+  </div>
+</div>
+
+<!-- S2: The Problem -->
+<div class="slide" id="s2" data-state="idle">
+  <span class="label">Why DDD exists</span>
+  <h2>The translation gap is where bugs live</h2>
+  <div class="two-col">
+    <div class="pcol bad">
+      <div class="clabel bad">❌ Without DDD — two languages</div>
+      <div class="crow"><span class="biz">"Place an order"</span><span class="techbad">INSERT INTO purchase_records</span></div>
+      <div class="crow"><span class="biz">"Approve invoice"</span><span class="techbad">SET status = 2</span></div>
+      <div class="crow"><span class="biz">"Customer cancelled"</span><span class="techbad">is_active = false</span></div>
+    </div>
+    <div class="pcol good">
+      <div class="clabel good">✅ With DDD — one language</div>
+      <div class="crow"><span class="biz">"Place an order"</span><span class="techgood">order.place()</span></div>
+      <div class="crow"><span class="biz">"Approve invoice"</span><span class="techgood">invoice.approve(mgr)</span></div>
+      <div class="crow"><span class="biz">"Customer cancelled"</span><span class="techgood">subscription.cancel(reason)</span></div>
+    </div>
+  </div>
+  <p style="margin-top:1.4rem;text-align:center;max-width:700px">DDD eliminates this translation gap. Business language and code language become the <span style="color:var(--text)">same language</span>.</p>
+</div>
+
+<!-- S3: Ubiquitous Language -->
+<div class="slide" id="s3" data-state="idle">
+  <span class="label">Pillar 1 — Core Philosophy</span>
+  <h2>Ubiquitous Language</h2>
+  <div class="bridge">
+    <div class="bbox ex">
+      <h3 style="color:var(--purple)">Domain Expert</h3>
+      <p style="margin-top:.5rem;font-size:.78rem">"When an order is placed, we check inventory and schedule delivery."</p>
+    </div>
+    <div class="bline"><hr><span>same words</span><hr></div>
+    <div class="bbox dev">
+      <h3 style="color:var(--blue)">Developer</h3>
+      <p style="margin-top:.5rem;font-size:.78rem;font-family:var(--mono)">order.place() → OrderPlaced → scheduleShipment()</p>
+    </div>
+  </div>
+  <ul class="rules">
+    <li>One term, one precise meaning — inside each Bounded Context</li>
+    <li>The code IS the documentation — rename in glossary → rename in code</li>
+    <li>No technical jargon in the model: no "Handler", "Manager", "Processor"</li>
+    <li>A domain expert should be able to read class names and understand them</li>
+  </ul>
+</div>
+
+<!-- S4: Bounded Contexts -->
+<div class="slide" id="s4" data-state="idle">
+  <span class="label">Pillar 2 — Strategic Design</span>
+  <h2>Bounded Contexts</h2>
+  <div class="ctxs">
+    <div class="cbox" style="border-color:rgba(155,127,232,.4)">
+      <div class="cname" style="color:var(--purple)">Ordering</div>
+      <div class="cent"><h4>Customer</h4><p>loyalty pts, history</p></div>
+      <div class="cent"><h4>Order</h4><p>Created → Confirmed → Shipped</p></div>
+      <div class="cent"><h4>OrderItem</h4><p>productId, qty, price</p></div>
+    </div>
+    <div class="cbox" style="border-color:rgba(75,158,245,.4)">
+      <div class="cname" style="color:var(--blue)">Inventory</div>
+      <div class="cent"><h4>InventoryItem</h4><p>stock levels, reservations</p></div>
+      <div class="cent"><h4>StockLevel</h4><p>Value Object — can't go negative</p></div>
+    </div>
+    <div class="cbox" style="border-color:rgba(46,196,164,.4)">
+      <div class="cname" style="color:var(--teal)">Shipping</div>
+      <div class="cent"><h4>Customer</h4><p>address only — different model</p></div>
+      <div class="cent"><h4>Shipment</h4><p>Scheduled → Dispatched → Delivered</p></div>
+    </div>
+  </div>
+  <p class="ctxnote">"Customer" lives in all 3 contexts — but means something <em style="color:var(--gold)">completely different</em> in each. That boundary is what a Bounded Context protects.</p>
+</div>
+
+<!-- S5: Building Blocks -->
+<div class="slide" id="s5" data-state="idle">
+  <span class="label">Pillar 3 — Tactical Design</span>
+  <h2>The six building blocks</h2>
+  <div class="blocks">
+    <div class="blk">
+      <div class="bicon">🪪</div>
+      <div class="bname">Entity</div>
+      <div class="bdesc">Has a unique ID. Mutable — tracks change over its lifetime.</div>
+      <div class="bex">Order, Customer, Shipment</div>
+    </div>
+    <div class="blk">
+      <div class="bicon">💎</div>
+      <div class="bname">Value Object</div>
+      <div class="bdesc">No ID. Defined purely by its value. Always immutable.</div>
+      <div class="bex">Money(100, USD)<br>Address, Quantity</div>
+    </div>
+    <div class="blk">
+      <div class="bicon">🛡️</div>
+      <div class="bname">Aggregate Root</div>
+      <div class="bdesc">Guards a cluster of objects. All changes go through it. Enforces invariants.</div>
+      <div class="bex">Order guards<br>its OrderItems</div>
+    </div>
+    <div class="blk">
+      <div class="bicon">🗄️</div>
+      <div class="bname">Repository</div>
+      <div class="bdesc">Load and save aggregates. Hides all database details from the domain.</div>
+      <div class="bex">IOrderRepository<br>interface only</div>
+    </div>
+    <div class="blk">
+      <div class="bicon">📢</div>
+      <div class="bname">Domain Event</div>
+      <div class="bdesc">A named fact — something important happened. Past tense. Immutable.</div>
+      <div class="bex">OrderPlaced<br>OrderConfirmed</div>
+    </div>
+  </div>
+</div>
+
+<!-- S6: Hexagonal Architecture -->
+<div class="slide" id="s6" data-state="idle">
+  <span class="label">Architecture</span>
+  <h2>Hexagonal — Ports &amp; Adapters</h2>
+  <div class="hexwrap">
+    <svg width="240" height="240" viewBox="0 0 240 240" style="flex-shrink:0">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="2"/>
+        </marker>
+      </defs>
+      <circle cx="120" cy="120" r="112" fill="none" stroke="#1C2A4A" stroke-width="1" stroke-dasharray="4 3"/>
+      <circle cx="120" cy="120" r="76"  fill="#0D1428"  stroke="#1C2A4A" stroke-width="1"/>
+      <circle cx="120" cy="120" r="44"  fill="#131D38"  stroke="#4B9EF5" stroke-width="1.5"/>
+      <text x="120" y="116" text-anchor="middle" fill="#4B9EF5" font-family="Space Grotesk" font-size="12" font-weight="600">Domain</text>
+      <text x="120" y="130" text-anchor="middle" fill="#6B7FA0" font-family="Inter" font-size="8.5">zero imports</text>
+      <text x="120" y="94"  text-anchor="middle" fill="#6B7FA0" font-family="Inter" font-size="8.5">Application</text>
+      <text x="120" y="18"  text-anchor="middle" fill="#7A8AA8" font-family="Inter" font-size="8">REST / GraphQL</text>
+      <text x="120" y="228" text-anchor="middle" fill="#7A8AA8" font-family="Inter" font-size="8">Postgres / Kafka</text>
+      <text x="12" y="124"  text-anchor="middle" fill="#7A8AA8" font-family="Inter" font-size="8" transform="rotate(-90 12 124)">CLI / Tests</text>
+      <text x="228" y="124" text-anchor="middle" fill="#7A8AA8" font-family="Inter" font-size="8" transform="rotate(90 228 124)">Email / Cache</text>
+      <line x1="120" y1="32"  x2="120" y2="76"  stroke="#4B9EF5" stroke-width="1" marker-end="url(#arr)"/>
+      <line x1="120" y1="208" x2="120" y2="164" stroke="#2EC4A4" stroke-width="1" marker-end="url(#arr)"/>
+    </svg>
+    <div class="hrules">
+      <div class="ritem"><div class="rnum">1</div><div class="rtxt"><h4>Domain at the centre</h4><p>Pure TypeScript — no TypeORM, no Express, no framework at all. Just business logic.</p></div></div>
+      <div class="ritem"><div class="rnum">2</div><div class="rtxt"><h4>Ports — interfaces in domain</h4><p><code>IOrderRepository</code>, <code>IEventBus</code> — defined by domain, implemented outside.</p></div></div>
+      <div class="ritem"><div class="rnum">3</div><div class="rtxt"><h4>Adapters — infrastructure</h4><p><code>TypeOrmOrderRepository</code> implements the port. Swap DB without touching domain.</p></div></div>
+      <div class="ritem"><div class="rnum">4</div><div class="rtxt"><h4>One rule: arrows point inward</h4><p>Infrastructure knows domain. Domain knows nothing outside itself.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- S7: POC -->
+<div class="slide" id="s7" data-state="idle">
+  <span class="label">The POC</span>
+  <h2>3 Bounded Contexts · 1 In-Process Event Bus</h2>
+  <div class="pocflow">
+    <div class="pbox" style="border-color:rgba(155,127,232,.5)">
+      <h4 style="color:var(--purple)">Ordering</h4>
+      <p>Created → Confirmed<br>→ Shipped → Delivered</p>
+    </div>
+    <div class="parr">
+      <span class="pev">OrderConfirmed →</span>
+      <div class="pline"></div>
+      <span class="pev">← DeliveryCompleted</span>
+    </div>
+    <div class="pbox" style="border-color:rgba(75,158,245,.5)">
+      <h4 style="color:var(--blue)">Inventory</h4>
+      <p>Check &amp; reserve stock<br>on confirmation</p>
+    </div>
+    <div class="parr">
+      <span class="pev">OrderConfirmed →</span>
+      <div class="pline"></div>
+      <span class="pev">← ShipmentScheduled</span>
+    </div>
+    <div class="pbox" style="border-color:rgba(46,196,164,.5)">
+      <h4 style="color:var(--teal)">Shipping</h4>
+      <p>Scheduled → Dispatched<br>→ InTransit → Delivered</p>
+    </div>
+  </div>
+  <div class="stack2">
+    <span class="stag">✓ Hexagonal architecture</span>
+    <span class="stag">✓ Domain invariants enforced</span>
+    <span class="stag">✓ Repositories as interfaces</span>
+    <span class="stag">✓ TypeORM entities separate from domain</span>
+    <span class="stag">✓ Jest · 85 %+ domain coverage</span>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<div class="nav">
+  <button class="nbtn" id="prev" onclick="go(-1)" disabled>←</button>
+  <button class="nbtn" id="next" onclick="go(1)">→</button>
+</div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const total  = slides.length;
+let cur = 0;
+
+// build dots
+const dotsEl = document.getElementById('dots');
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' on' : '');
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+});
+
+function goTo(idx) {
+  if (idx === cur || idx < 0 || idx >= total) return;
+  const old = cur; cur = idx;
+  slides[old].dataset.state = 'exit';
+  slides[cur].dataset.state  = 'active';
+  const ref = slides[old];
+  setTimeout(() => { ref.dataset.state = 'idle'; }, 420);
+  refresh();
+}
+function go(d) { goTo(cur + d); }
+
+function refresh() {
+  document.getElementById('ctr').textContent = `${cur + 1} / ${total}`;
+  document.getElementById('prog').style.width = `${(cur + 1) / total * 100}%`;
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
+  document.getElementById('prev').disabled = cur === 0;
+  document.getElementById('next').disabled = cur === total - 1;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+  if (e.key === 'ArrowLeft')                    { e.preventDefault(); go(-1); }
+});
+
+// 5-min timer
+let secs = 300, running = false, iv;
+const tmr = document.getElementById('tmr');
+function fmt(s) { return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+tmr.addEventListener('click', () => {
+  if (!running) {
+    iv = setInterval(() => {
+      secs--;
+      tmr.textContent = fmt(secs);
+      tmr.className = 'timer' + (secs <= 60 ? ' danger' : secs <= 120 ? ' warn' : '');
+      if (secs <= 0) { clearInterval(iv); running = false; tmr.textContent = '0:00'; }
+    }, 1000);
+    running = true;
+  } else { clearInterval(iv); running = false; }
+});
+tmr.textContent = fmt(secs);
+refresh();
+</script>
+</body>
+</html>
